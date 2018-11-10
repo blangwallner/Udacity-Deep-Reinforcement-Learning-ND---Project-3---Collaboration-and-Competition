@@ -12,20 +12,20 @@ def hidden_init(layer):
     return (-lim, lim)
 
 
-class LowDimActor(nn.Module):
+class ActorModel(nn.Module):
     """Actor (Policy) Model."""
 
-    def __init__(self, input_size, output_size, seed, fc1_units=256, fc2_units=128):
-        """Initialize parameters and build model.
+    def __init__(self, input_size, output_size, seed, fc1_units=256, fc2_units=256):
+        """Initialize parameters and build actor model.
         Params
         ======
-            input_size (int): number of dimensions for input layer
+            input_size (int):  number of dimensions for input layer
             output_size (int): number of dimensions for output layer
             seed (int): random seed
             fc1_units (int): number of nodes in first hidden layer
             fc2_units (int): number of nodes in second hidden layer
         """
-        super(LowDimActor, self).__init__()
+        super(ActorModel, self).__init__()
         self.seed = torch.manual_seed(seed)
         self.fc1 = nn.Linear(input_size, fc1_units)
         self.fc2 = nn.Linear(fc1_units, fc2_units)
@@ -40,7 +40,7 @@ class LowDimActor(nn.Module):
         self.fc3.weight.data.uniform_(-3e-3, 3e-3)
 
     def forward(self, state):
-        """Build an actor (policy) network that maps states -> actions."""
+        """Build an actor network that maps states to actions."""
         if state.dim() == 1:
             state = torch.unsqueeze(state,0)
         x = F.relu(self.fc1(state))
@@ -50,10 +50,10 @@ class LowDimActor(nn.Module):
         return x
 
 
-class LowDimCritic(nn.Module):
+class CriticModel(nn.Module):
     """Critic (Value) Model."""
 
-    def __init__(self, input_size, seed, fc1_units=256, fc2_units=128):
+    def __init__(self, input_size, seed, fc1_units=256, fc2_units=256):
         """Initialize parameters and build model.
         Params
         ======
@@ -62,7 +62,7 @@ class LowDimCritic(nn.Module):
             fc1_units (int): number of nodes in the first hidden layer
             fc2_units (int): number of nodes in the second hidden layer
         """
-        super(LowDimCritic, self).__init__()
+        super(CriticModel, self).__init__()
         self.seed = torch.manual_seed(seed)
         self.fc1 = nn.Linear(input_size, fc1_units)
         self.fc2 = nn.Linear(fc1_units, fc2_units)
@@ -77,9 +77,7 @@ class LowDimCritic(nn.Module):
         self.fc3.weight.data.uniform_(-3e-3, 3e-3)
 
     def forward(self, states, actions):
-        """Build a critic (value) network that maps (states, actions) pairs -> Q-values."""
-        #if state.dim() == 1:
-        #    state = torch.unsqueeze(state,0)
+        """Build a critic network that maps (states, actions) pairs to Q-values."""
         xs = torch.cat((states, actions), dim=1)
         x = F.relu(self.fc1(xs))
         x = self.bn1(x)
@@ -88,25 +86,23 @@ class LowDimCritic(nn.Module):
         return x
 
 
-class LowDim2x():
+class Actor_Critic_Models():
     """
-    Container for actor and critic along with respective target networks.
-    Each actor takes a state input for a single agent.
-    Each critic takes a concatentation of the states and actions from all agents.
-    Local and target models initialized with identical weights by using same seed.
+    Create object containing all models required per DDPG agent:
+    local and target actor and local and target critic
     """
 
     def __init__(self, n_agents, state_size=24, action_size=2, seed=0):
         """
         Params
         ======
-            n_agents (int): number of distinct agents
+            n_agents (int): number of agents
             state_size (int): number of state dimensions for a single agent
             action_size (int): number of action dimensions for a single agent
             seed (int): random seed
         """
-        self.actor_local = LowDimActor(state_size, action_size, seed).to(device)
-        self.actor_target = LowDimActor(state_size, action_size, seed).to(device)
+        self.actor_local = ActorModel(state_size, action_size, seed).to(device)
+        self.actor_target = ActorModel(state_size, action_size, seed).to(device)
         critic_input_size = (state_size+action_size)*n_agents
-        self.critic_local = LowDimCritic(critic_input_size, seed).to(device)
-        self.critic_target = LowDimCritic(critic_input_size, seed).to(device)
+        self.critic_local = CriticModel(critic_input_size, seed).to(device)
+        self.critic_target = CriticModel(critic_input_size, seed).to(device)
