@@ -85,20 +85,19 @@ class MADDPG():
     def learn(self, experiences, gamma):
         # each agent uses its own actor to calculate next_actions
         all_next_actions = []
-        for i, agent in enumerate(self.agents):
-            _, _, _, next_states, _ = experiences[i]
-            agent_id = torch.tensor([i]).to(device)
-            next_state = next_states.reshape(-1, 2, 24).index_select(1, agent_id).squeeze(1)
-            next_action = agent.actor_target(next_state)
-            all_next_actions.append(next_action)
-        # each agent uses its own actor to calculate actions
         all_actions = []
         for i, agent in enumerate(self.agents):
-            states, _, _, _, _ = experiences[i]
+            states, _, _, next_states, _ = experiences[i]
             agent_id = torch.tensor([i]).to(device)
+            # extract agent i's state and get action via actor network
             state = states.reshape(-1, 2, 24).index_select(1, agent_id).squeeze(1)
             action = agent.actor_local(state)
             all_actions.append(action)
+            # extract agent i's next state and get action via target actor network
+            next_state = next_states.reshape(-1, 2, 24).index_select(1, agent_id).squeeze(1)
+            next_action = agent.actor_target(next_state)
+            all_next_actions.append(next_action)
+                       
         # each agent learns from its experience sample
         for i, agent in enumerate(self.agents):
             agent.learn(i, experiences[i], gamma, all_next_actions, all_actions)
