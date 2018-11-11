@@ -46,8 +46,8 @@ See the main file `Tennis.ipynb` to get an introduction to the environment and f
 
 The reinforcement learning approach we use in this project is called Multi Agent Deep Deterministic Policy Gradients (MADDPG). see this [paper](https://papers.nips.cc/paper/7217-multi-agent-actor-critic-for-mixed-cooperative-competitive-environments.pdf). In this model every agent itself is modeled as a Deep Deterministic Policy Gradient (DDPG) agent (see this [paper](https://arxiv.org/pdf/1509.02971.pdf)) where, however, some information is shared between the agents.
 
-In particular, each of the agents in this model has its own actor and critic model. The actors each receive as input the individual state (observations) of the agent and output a (two-dimensional) action. The critic model of each actor, however, receives the states and actions of all actors concatenated.
+In particular, each of the agents in this model has its own actor and critic model. The actors each receive as input the individual state (observations) of the agent and output a (two-dimensional) action. The crit`ic model of each actor, however, receives the states and actions of all actors concatenated.
 
-Throughout training the agents all use a common experience replay buffer (a set of stored previous 1-step experiences) and draw independent samples.`
+Throughout training the agents all use a common experience replay buffer (a set of stored previous 1-step experiences) and draw independent samples.
 
 Details of the implementation including the neural nets to model actor and critic models can be found in the modules `MADDPG_agent.py` and `models.py` as well as the report (report.pdf`). With the current set of models and hyperparameters the environment can be solved in around 3200 steps.
